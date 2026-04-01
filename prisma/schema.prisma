@@ -1,0 +1,138 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  projects Project[]
+
+  @@map("users")
+}
+
+model Project {
+  id        String        @id @default(uuid())
+  title     String
+  prompt    String
+  status    ProjectStatus @default(DRAFT)
+  userId    String        @map("user_id")
+  createdAt DateTime      @default(now()) @map("created_at")
+  updatedAt DateTime      @updatedAt @map("updated_at")
+
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenes       Scene[]
+  pipelineRuns PipelineRun[]
+
+  @@map("projects")
+}
+
+enum ProjectStatus {
+  DRAFT
+  GENERATING
+  COMPLETED
+  FAILED
+}
+
+model Scene {
+  id        String   @id @default(uuid())
+  projectId String   @map("project_id")
+  sortOrder Int      @map("sort_order")
+  title     String
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  assets  Asset[]
+
+  @@map("scenes")
+}
+
+model PipelineRun {
+  id        String         @id @default(uuid())
+  projectId String         @map("project_id")
+  status    PipelineStatus @default(PENDING)
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+
+  project Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  steps   PipelineStep[]
+
+  @@map("pipeline_runs")
+}
+
+enum PipelineStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model PipelineStep {
+  id            String     @id @default(uuid())
+  pipelineRunId String     @map("pipeline_run_id")
+  stepType      StepType   @map("step_type")
+  sortOrder     Int        @map("sort_order")
+  status        StepStatus @default(PENDING)
+  errorMessage  String?    @map("error_message")
+  startedAt     DateTime?  @map("started_at")
+  completedAt   DateTime?  @map("completed_at")
+  createdAt     DateTime   @default(now()) @map("created_at")
+
+  pipelineRun PipelineRun @relation(fields: [pipelineRunId], references: [id], onDelete: Cascade)
+  assets      Asset[]
+
+  @@map("pipeline_steps")
+}
+
+enum StepType {
+  SCRIPT_GENERATION
+  IMAGE_GENERATION
+  AUDIO_GENERATION
+  ASSEMBLY
+}
+
+enum StepStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  SKIPPED
+}
+
+model Asset {
+  id             String    @id @default(uuid())
+  pipelineStepId String    @map("pipeline_step_id")
+  sceneId        String?   @map("scene_id")
+  assetType      AssetType @map("asset_type")
+  fileName       String    @map("file_name")
+  storageUrl     String    @map("storage_url")
+  mimeType       String    @map("mime_type")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  pipelineStep PipelineStep @relation(fields: [pipelineStepId], references: [id], onDelete: Cascade)
+  scene        Scene?       @relation(fields: [sceneId], references: [id], onDelete: SetNull)
+
+  @@map("assets")
+}
+
+enum AssetType {
+  SCRIPT
+  IMAGE
+  AUDIO
+  VIDEO
+}
