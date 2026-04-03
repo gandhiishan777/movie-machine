@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { executePipeline } from '@/lib/pipeline'
 
 export async function POST(
   request: Request,
@@ -49,6 +50,8 @@ export async function POST(
       include: { steps: true },
     })
   })
+  // Fire and forget — don't await
+  executePipeline(pipelineRun!.id, id, project.prompt)
 
   return NextResponse.json(pipelineRun, { status: 201 })
 }
