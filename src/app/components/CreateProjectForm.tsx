@@ -25,13 +25,28 @@ export default function CreateProjectForm({ userId }: { userId: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title: title.trim(), prompt: prompt.trim(), userId }),
       })
+
+      if (!createRes.ok) {
+        const payload = (await createRes.json().catch(() => null)) as { error?: string } | null
+        throw new Error(payload?.error ?? 'Could not create project')
+      }
+
       const created = await createRes.json()
 
-      await fetch(`/api/projects/${created.id}/generate`, { method: 'POST' })
+      const generateRes = await fetch(`/api/projects/${created.id}/generate`, { method: 'POST' })
+
+      if (!generateRes.ok) {
+        const payload = (await generateRes.json().catch(() => null)) as { error?: string } | null
+        throw new Error(payload?.error ?? 'Could not start generation')
+      }
 
       router.push(`/projects/${created.id}`)
-    } catch {
-      setError('Something went wrong. Please try again.')
+    } catch (submitError) {
+      setError(
+        submitError instanceof Error
+          ? submitError.message
+          : 'Something went wrong. Please try again.'
+      )
       setIsCreating(false)
     }
   }
@@ -107,7 +122,7 @@ export default function CreateProjectForm({ userId }: { userId: string }) {
         <GenerateButton />
 
         <p className="text-center text-[#1E2940] text-xs">
-          Powered by GPT-4o · Takes ~20 seconds
+          Powered by GPT-4o + Gemini Flash · Script and storyboard generation may take a minute or two
         </p>
       </form>
     </div>

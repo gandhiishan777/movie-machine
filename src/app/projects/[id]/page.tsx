@@ -5,6 +5,8 @@ import { IconCheck, IconCircleX } from '@/app/components/icons'
 import PipelineProgress from '@/app/components/PipelineProgress'
 import PollingRefresher from './PollingRefresher'
 import FailedProjectActions from './FailedProjectActions'
+import ProjectStoryboard from './ProjectStoryboard'
+import { getAssetProxyUrl } from '@/lib/storage'
 
 export default async function ProjectPage({
   params,
@@ -18,8 +20,13 @@ export default async function ProjectPage({
     include: {
       scenes: { orderBy: { sortOrder: 'asc' } },
       pipelineRuns: {
-        include: { steps: { orderBy: { sortOrder: 'asc' } } },
-        orderBy: { id: 'desc' },
+        include: {
+          steps: {
+            orderBy: { sortOrder: 'asc' },
+            include: { assets: true },
+          },
+        },
+        orderBy: { createdAt: 'desc' },
         take: 1,
       },
     },
@@ -28,6 +35,35 @@ export default async function ProjectPage({
   if (!project) notFound()
 
   const latestRun = project.pipelineRuns[0] ?? null
+  const imageStep = latestRun?.steps.find((step) => step.stepType === 'IMAGE_GENERATION') ?? null
+  const imageAssetsBySceneId = new Map(
+    (imageStep?.assets ?? [])
+      .filter((asset) => asset.sceneId)
+      .map((asset) => [asset.sceneId!, asset])
+  )
+  const storyboardScenes = project.scenes.map((scene) => {
+    const asset = imageAssetsBySceneId.get(scene.id)
+
+    return {
+      id: scene.id,
+      sortOrder: scene.sortOrder,
+      title: scene.title,
+      content: scene.content,
+      image: asset
+        ? {
+            id: asset.id,
+            url: getAssetProxyUrl(asset.id),
+            mimeType: asset.mimeType,
+          }
+        : null,
+    }
+  })
+  const currentSceneNumber =
+    imageStep?.status === 'RUNNING'
+      ? Math.min((imageStep.assets.length || 0) + 1, Math.max(project.scenes.length, 1))
+      : null
+  const failedStep = latestRun?.steps.find((step) => step.status === 'FAILED') ?? null
+  const failedStepMessage = getProjectFailureMessage(failedStep?.errorMessage ?? null)
 
   return (
     <div className="min-h-screen bg-black text-[#F8FAFC]">
@@ -44,54 +80,64 @@ export default async function ProjectPage({
           <div className="flex flex-col items-center gap-5">
             <div className="w-12 h-12 border-2 border-[#E11D48] border-t-transparent rounded-full animate-spin" />
             <p className="text-[#475569] text-sm tracking-wide">Setting up your project...</p>
-            <PollingRefresher isGenerating={true} />
+            <PollingRefresher projectId={project.id} isGenerating={true} />
           </div>
         )}
 
         {/* ── GENERATING — pipeline progress ───────────────────────────── */}
         {project.status === 'GENERATING' && (
-          <>
-            <PipelineProgress
-              title={project.title}
-              steps={latestRun?.steps ?? []}
-            />
-            <PollingRefresher isGenerating={true} />
-          </>
+          <div className="w-full space-y-8">
+            <div className="mx-auto">
+              <PipelineProgress
+                title={project.title}
+                steps={latestRun?.steps ?? []}
+              />
+            </div>
+
+            {project.scenes.length > 0 && (
+              <ProjectStoryboard
+                title={project.title}
+                status={project.status}
+                scenes={storyboardScenes}
+                steps={(latestRun?.steps ?? []).map((step) => ({
+                  id: step.id,
+                  stepType: step.stepType,
+                  status: step.status,
+                  errorMessage: step.errorMessage,
+                }))}
+                currentSceneNumber={currentSceneNumber}
+              />
+            )}
+
+            <PollingRefresher projectId={project.id} isGenerating={true} />
+          </div>
         )}
 
-        {/* ── COMPLETED — script reveal ─────────────────────────────────── */}
+        {/* ── COMPLETED — storyboard reveal ─────────────────────────────── */}
         {project.status === 'COMPLETED' && (
-          <div className="w-full max-w-2xl">
-            <div className="text-center mb-10">
+          <div className="w-full space-y-8">
+            <div className="text-center">
               <div className="inline-flex items-center gap-1.5 text-emerald-400 text-sm font-medium mb-3">
                 <IconCheck className="w-4 h-4" />
-                Script complete
+                Storyboard complete
               </div>
-              <h2 className="text-4xl font-bold tracking-tight mb-1">{project.title}</h2>
               <p className="text-[#475569] text-sm">
-                {project.scenes.length} scene{project.scenes.length !== 1 ? 's' : ''} written
+                {project.scenes.length} scene{project.scenes.length !== 1 ? 's' : ''} written and illustrated
               </p>
             </div>
 
-            <div className="space-y-4">
-              {project.scenes.map((scene, i) => (
-                <div
-                  key={scene.id}
-                  className="bg-[#0F0F23] border border-[#1E1B4B] rounded-2xl p-6 scene-card"
-                  style={{ animationDelay: `${i * 80}ms` }}
-                >
-                  <div className="flex items-start gap-3 mb-3">
-                    <span className="flex-shrink-0 bg-[#E11D48]/15 text-[#E11D48] text-[10px] font-bold px-2 py-1 rounded-full tracking-widest uppercase mt-0.5">
-                      Scene {scene.sortOrder}
-                    </span>
-                    <h3 className="font-semibold text-[#F8FAFC] text-base leading-snug">{scene.title}</h3>
-                  </div>
-                  <p className="text-[#64748B] leading-relaxed text-sm whitespace-pre-line">
-                    {scene.content}
-                  </p>
-                </div>
-              ))}
-            </div>
+            <ProjectStoryboard
+              title={project.title}
+              status={project.status}
+              scenes={storyboardScenes}
+              steps={(latestRun?.steps ?? []).map((step) => ({
+                id: step.id,
+                stepType: step.stepType,
+                status: step.status,
+                errorMessage: step.errorMessage,
+              }))}
+              currentSceneNumber={null}
+            />
 
             <div className="text-center mt-10">
               <Link
@@ -106,19 +152,56 @@ export default async function ProjectPage({
 
         {/* ── FAILED — error state ──────────────────────────────────────── */}
         {project.status === 'FAILED' && (
-          <div className="w-full max-w-md text-center">
-            <div className="bg-[#E11D48]/8 border border-[#E11D48]/25 rounded-2xl p-10 mb-6">
-              <IconCircleX className="w-12 h-12 text-[#E11D48] mx-auto mb-4" />
-              <h2 className="text-xl font-bold mb-2">Generation Failed</h2>
-              <p className="text-[#475569] text-sm leading-relaxed">
-                Something went wrong during script generation. Check your OpenAI API key and try again.
-              </p>
+          <div className="w-full space-y-8">
+            <div className="w-full max-w-2xl mx-auto text-center">
+              <div className="bg-[#E11D48]/8 border border-[#E11D48]/25 rounded-2xl p-8 mb-6">
+                <IconCircleX className="w-12 h-12 text-[#E11D48] mx-auto mb-4" />
+                <h2 className="text-xl font-bold mb-2">Generation Failed</h2>
+                <p className="text-[#475569] text-sm leading-relaxed">
+                  {failedStep?.stepType === 'IMAGE_GENERATION'
+                    ? failedStepMessage
+                    : 'Something went wrong during script generation. Check your API keys and try again.'}
+                </p>
+              </div>
+              <FailedProjectActions projectId={project.id} />
             </div>
-            <FailedProjectActions projectId={project.id} />
+
+            {project.scenes.length > 0 && (
+              <ProjectStoryboard
+                title={project.title}
+                status={project.status}
+                scenes={storyboardScenes}
+                steps={(latestRun?.steps ?? []).map((step) => ({
+                  id: step.id,
+                  stepType: step.stepType,
+                  status: step.status,
+                  errorMessage: step.errorMessage,
+                }))}
+                currentSceneNumber={currentSceneNumber}
+              />
+            )}
           </div>
         )}
 
       </div>
     </div>
   )
+}
+
+function getProjectFailureMessage(errorMessage: string | null) {
+  if (!errorMessage) {
+    return 'Image generation hit a problem. Your scenes are still saved and you can retry from the visual stage.'
+  }
+
+  const normalized = errorMessage.toLowerCase()
+
+  if (
+    normalized.includes('resource_exhausted') ||
+    normalized.includes('quota') ||
+    normalized.includes('429')
+  ) {
+    return 'Gemini image generation hit a quota or billing limit. Your scenes are saved, but frames cannot be created until quota is available.'
+  }
+
+  return 'Image generation hit a problem. Your scenes are still saved and you can retry from the visual stage.'
 }

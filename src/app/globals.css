@@ -44,10 +44,20 @@ body {
   animation: pulse-ring 1.5s ease infinite;
 }
 
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .scene-card        { animation: none; }
   .pulse-ring        { animation: none; }
   .movie-title-glow  { text-shadow: none; }
   .animate-spin      { animation: none; }
+  .animate-\[shimmer_2\.4s_linear_infinite\] { animation: none; }
 }

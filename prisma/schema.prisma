@@ -117,6 +117,7 @@ model Asset {
   sceneId        String?   @map("scene_id")
   assetType      AssetType @map("asset_type")
   fileName       String    @map("file_name")
+  storageKey     String    @map("storage_key")
   storageUrl     String    @map("storage_url")
   mimeType       String    @map("mime_type")
   createdAt      DateTime  @default(now()) @map("created_at")

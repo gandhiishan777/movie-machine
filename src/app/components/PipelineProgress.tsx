@@ -10,7 +10,7 @@ interface PipelineStepData {
   errorMessage?: string | null
 }
 
-type DisplayStatus = 'RUNNING' | 'LOCKED' | 'COMPLETED' | 'FAILED'
+type DisplayStatus = 'RUNNING' | 'QUEUED' | 'LOCKED' | 'SKIPPED' | 'COMPLETED' | 'FAILED'
 
 const STEP_META: Record<PipelineStepData['stepType'], { label: string; description: string }> = {
   SCRIPT_GENERATION: { label: 'Script Generation', description: 'Writing your screenplay with GPT-4o' },
@@ -23,7 +23,8 @@ function toDisplayStatus(status: PipelineStepData['status']): DisplayStatus {
   if (status === 'RUNNING')   return 'RUNNING'
   if (status === 'COMPLETED') return 'COMPLETED'
   if (status === 'FAILED')    return 'FAILED'
-  return 'LOCKED' // PENDING | SKIPPED
+  if (status === 'PENDING')   return 'QUEUED'
+  return 'SKIPPED'
 }
 
 function PipelineStepRow({
@@ -56,6 +57,12 @@ function PipelineStepRow({
         {status === 'LOCKED' && (
           <IconLock className="w-5 h-5 text-[#334155]" />
         )}
+        {status === 'SKIPPED' && (
+          <IconLock className="w-5 h-5 text-[#475569]" />
+        )}
+        {status === 'QUEUED' && (
+          <div className="w-2.5 h-2.5 rounded-full bg-[#64748B]" />
+        )}
         {status === 'COMPLETED' && (
           <IconCheck className="w-6 h-6 text-emerald-400" />
         )}
@@ -70,6 +77,16 @@ function PipelineStepRow({
           {status === 'LOCKED' && (
             <span className="text-[10px] bg-[#1E1B4B] text-[#475569] px-2 py-0.5 rounded-full font-semibold tracking-wide uppercase">
               Coming soon
+            </span>
+          )}
+          {status === 'SKIPPED' && (
+            <span className="text-[10px] bg-[#1E293B]/40 text-[#94A3B8] px-2 py-0.5 rounded-full font-semibold tracking-wide uppercase">
+              Later phase
+            </span>
+          )}
+          {status === 'QUEUED' && (
+            <span className="text-[10px] bg-[#334155]/35 text-[#CBD5E1] px-2 py-0.5 rounded-full font-semibold tracking-wide uppercase">
+              Queued
             </span>
           )}
           {status === 'RUNNING' && (
@@ -124,7 +141,7 @@ export default function PipelineProgress({
       </div>
 
       <p className="text-center text-[#1E2940] text-xs mt-6">
-        Sit tight — this usually takes 15–30 seconds
+        Scripts land first. Storyboard frames usually take another minute or two.
       </p>
     </div>
   )

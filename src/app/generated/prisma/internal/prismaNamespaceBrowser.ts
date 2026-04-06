@@ -144,6 +144,7 @@ export const AssetScalarFieldEnum = {
   sceneId: 'sceneId',
   assetType: 'assetType',
   fileName: 'fileName',
+  storageKey: 'storageKey',
   storageUrl: 'storageUrl',
   mimeType: 'mimeType',
   createdAt: 'createdAt'

@@ -1,0 +1,1 @@
+- Do not hand-author Prisma migration files. Change `prisma/schema.prisma` and use Prisma CLI to generate/apply migrations so local migration history always matches Prisma's view of the database.

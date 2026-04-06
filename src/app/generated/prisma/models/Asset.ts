@@ -30,6 +30,7 @@ export type AssetMinAggregateOutputType = {
   sceneId: string | null
   assetType: $Enums.AssetType | null
   fileName: string | null
+  storageKey: string | null
   storageUrl: string | null
   mimeType: string | null
   createdAt: Date | null
@@ -41,6 +42,7 @@ export type AssetMaxAggregateOutputType = {
   sceneId: string | null
   assetType: $Enums.AssetType | null
   fileName: string | null
+  storageKey: string | null
   storageUrl: string | null
   mimeType: string | null
   createdAt: Date | null
@@ -52,6 +54,7 @@ export type AssetCountAggregateOutputType = {
   sceneId: number
   assetType: number
   fileName: number
+  storageKey: number
   storageUrl: number
   mimeType: number
   createdAt: number
@@ -65,6 +68,7 @@ export type AssetMinAggregateInputType = {
   sceneId?: true
   assetType?: true
   fileName?: true
+  storageKey?: true
   storageUrl?: true
   mimeType?: true
   createdAt?: true
@@ -76,6 +80,7 @@ export type AssetMaxAggregateInputType = {
   sceneId?: true
   assetType?: true
   fileName?: true
+  storageKey?: true
   storageUrl?: true
   mimeType?: true
   createdAt?: true
@@ -87,6 +92,7 @@ export type AssetCountAggregateInputType = {
   sceneId?: true
   assetType?: true
   fileName?: true
+  storageKey?: true
   storageUrl?: true
   mimeType?: true
   createdAt?: true
@@ -171,6 +177,7 @@ export type AssetGroupByOutputType = {
   sceneId: string | null
   assetType: $Enums.AssetType
   fileName: string
+  storageKey: string
   storageUrl: string
   mimeType: string
   createdAt: Date
@@ -203,6 +210,7 @@ export type AssetWhereInput = {
   sceneId?: Prisma.StringNullableFilter<"Asset"> | string | null
   assetType?: Prisma.EnumAssetTypeFilter<"Asset"> | $Enums.AssetType
   fileName?: Prisma.StringFilter<"Asset"> | string
+  storageKey?: Prisma.StringFilter<"Asset"> | string
   storageUrl?: Prisma.StringFilter<"Asset"> | string
   mimeType?: Prisma.StringFilter<"Asset"> | string
   createdAt?: Prisma.DateTimeFilter<"Asset"> | Date | string
@@ -216,6 +224,7 @@ export type AssetOrderByWithRelationInput = {
   sceneId?: Prisma.SortOrderInput | Prisma.SortOrder
   assetType?: Prisma.SortOrder
   fileName?: Prisma.SortOrder
+  storageKey?: Prisma.SortOrder
   storageUrl?: Prisma.SortOrder
   mimeType?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -232,6 +241,7 @@ export type AssetWhereUniqueInput = Prisma.AtLeast<{
   sceneId?: Prisma.StringNullableFilter<"Asset"> | string | null
   assetType?: Prisma.EnumAssetTypeFilter<"Asset"> | $Enums.AssetType
   fileName?: Prisma.StringFilter<"Asset"> | string
+  storageKey?: Prisma.StringFilter<"Asset"> | string
   storageUrl?: Prisma.StringFilter<"Asset"> | string
   mimeType?: Prisma.StringFilter<"Asset"> | string
   createdAt?: Prisma.DateTimeFilter<"Asset"> | Date | string
@@ -245,6 +255,7 @@ export type AssetOrderByWithAggregationInput = {
   sceneId?: Prisma.SortOrderInput | Prisma.SortOrder
   assetType?: Prisma.SortOrder
   fileName?: Prisma.SortOrder
+  storageKey?: Prisma.SortOrder
   storageUrl?: Prisma.SortOrder
   mimeType?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -262,6 +273,7 @@ export type AssetScalarWhereWithAggregatesInput = {
   sceneId?: Prisma.StringNullableWithAggregatesFilter<"Asset"> | string | null
   assetType?: Prisma.EnumAssetTypeWithAggregatesFilter<"Asset"> | $Enums.AssetType
   fileName?: Prisma.StringWithAggregatesFilter<"Asset"> | string
+  storageKey?: Prisma.StringWithAggregatesFilter<"Asset"> | string
   storageUrl?: Prisma.StringWithAggregatesFilter<"Asset"> | string
   mimeType?: Prisma.StringWithAggregatesFilter<"Asset"> | string
   createdAt?: Prisma.DateTimeWithAggregatesFilter<"Asset"> | Date | string
@@ -271,6 +283,7 @@ export type AssetCreateInput = {
   id?: string
   assetType: $Enums.AssetType
   fileName: string
+  storageKey: string
   storageUrl: string
   mimeType: string
   createdAt?: Date | string
@@ -284,6 +297,7 @@ export type AssetUncheckedCreateInput = {
   sceneId?: string | null
   assetType: $Enums.AssetType
   fileName: string
+  storageKey: string
   storageUrl: string
   mimeType: string
   createdAt?: Date | string
@@ -293,6 +307,7 @@ export type AssetUpdateInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   assetType?: Prisma.EnumAssetTypeFieldUpdateOperationsInput | $Enums.AssetType
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
   storageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -306,6 +321,7 @@ export type AssetUncheckedUpdateInput = {
   sceneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   assetType?: Prisma.EnumAssetTypeFieldUpdateOperationsInput | $Enums.AssetType
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
   storageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -317,6 +333,7 @@ export type AssetCreateManyInput = {
   sceneId?: string | null
   assetType: $Enums.AssetType
   fileName: string
+  storageKey: string
   storageUrl: string
   mimeType: string
   createdAt?: Date | string
@@ -326,6 +343,7 @@ export type AssetUpdateManyMutationInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   assetType?: Prisma.EnumAssetTypeFieldUpdateOperationsInput | $Enums.AssetType
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
   storageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -337,6 +355,7 @@ export type AssetUncheckedUpdateManyInput = {
   sceneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   assetType?: Prisma.EnumAssetTypeFieldUpdateOperationsInput | $Enums.AssetType
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
   storageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -358,6 +377,7 @@ export type AssetCountOrderByAggregateInput = {
   sceneId?: Prisma.SortOrder
   assetType?: Prisma.SortOrder
   fileName?: Prisma.SortOrder
+  storageKey?: Prisma.SortOrder
   storageUrl?: Prisma.SortOrder
   mimeType?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -369,6 +389,7 @@ export type AssetMaxOrderByAggregateInput = {
   sceneId?: Prisma.SortOrder
   assetType?: Prisma.SortOrder
   fileName?: Prisma.SortOrder
+  storageKey?: Prisma.SortOrder
   storageUrl?: Prisma.SortOrder
   mimeType?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -380,6 +401,7 @@ export type AssetMinOrderByAggregateInput = {
   sceneId?: Prisma.SortOrder
   assetType?: Prisma.SortOrder
   fileName?: Prisma.SortOrder
+  storageKey?: Prisma.SortOrder
   storageUrl?: Prisma.SortOrder
   mimeType?: Prisma.SortOrder
   createdAt?: Prisma.SortOrder
@@ -477,6 +499,7 @@ export type AssetCreateWithoutSceneInput = {
   id?: string
   assetType: $Enums.AssetType
   fileName: string
+  storageKey: string
   storageUrl: string
   mimeType: string
   createdAt?: Date | string
@@ -488,6 +511,7 @@ export type AssetUncheckedCreateWithoutSceneInput = {
   pipelineStepId: string
   assetType: $Enums.AssetType
   fileName: string
+  storageKey: string
   storageUrl: string
   mimeType: string
   createdAt?: Date | string
@@ -528,6 +552,7 @@ export type AssetScalarWhereInput = {
   sceneId?: Prisma.StringNullableFilter<"Asset"> | string | null
   assetType?: Prisma.EnumAssetTypeFilter<"Asset"> | $Enums.AssetType
   fileName?: Prisma.StringFilter<"Asset"> | string
+  storageKey?: Prisma.StringFilter<"Asset"> | string
   storageUrl?: Prisma.StringFilter<"Asset"> | string
   mimeType?: Prisma.StringFilter<"Asset"> | string
   createdAt?: Prisma.DateTimeFilter<"Asset"> | Date | string
@@ -537,6 +562,7 @@ export type AssetCreateWithoutPipelineStepInput = {
   id?: string
   assetType: $Enums.AssetType
   fileName: string
+  storageKey: string
   storageUrl: string
   mimeType: string
   createdAt?: Date | string
@@ -548,6 +574,7 @@ export type AssetUncheckedCreateWithoutPipelineStepInput = {
   sceneId?: string | null
   assetType: $Enums.AssetType
   fileName: string
+  storageKey: string
   storageUrl: string
   mimeType: string
   createdAt?: Date | string
@@ -584,6 +611,7 @@ export type AssetCreateManySceneInput = {
   pipelineStepId: string
   assetType: $Enums.AssetType
   fileName: string
+  storageKey: string
   storageUrl: string
   mimeType: string
   createdAt?: Date | string
@@ -593,6 +621,7 @@ export type AssetUpdateWithoutSceneInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   assetType?: Prisma.EnumAssetTypeFieldUpdateOperationsInput | $Enums.AssetType
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
   storageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -604,6 +633,7 @@ export type AssetUncheckedUpdateWithoutSceneInput = {
   pipelineStepId?: Prisma.StringFieldUpdateOperationsInput | string
   assetType?: Prisma.EnumAssetTypeFieldUpdateOperationsInput | $Enums.AssetType
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
   storageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -614,6 +644,7 @@ export type AssetUncheckedUpdateManyWithoutSceneInput = {
   pipelineStepId?: Prisma.StringFieldUpdateOperationsInput | string
   assetType?: Prisma.EnumAssetTypeFieldUpdateOperationsInput | $Enums.AssetType
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
   storageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -624,6 +655,7 @@ export type AssetCreateManyPipelineStepInput = {
   sceneId?: string | null
   assetType: $Enums.AssetType
   fileName: string
+  storageKey: string
   storageUrl: string
   mimeType: string
   createdAt?: Date | string
@@ -633,6 +665,7 @@ export type AssetUpdateWithoutPipelineStepInput = {
   id?: Prisma.StringFieldUpdateOperationsInput | string
   assetType?: Prisma.EnumAssetTypeFieldUpdateOperationsInput | $Enums.AssetType
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
   storageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -644,6 +677,7 @@ export type AssetUncheckedUpdateWithoutPipelineStepInput = {
   sceneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   assetType?: Prisma.EnumAssetTypeFieldUpdateOperationsInput | $Enums.AssetType
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
   storageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -654,6 +688,7 @@ export type AssetUncheckedUpdateManyWithoutPipelineStepInput = {
   sceneId?: Prisma.NullableStringFieldUpdateOperationsInput | string | null
   assetType?: Prisma.EnumAssetTypeFieldUpdateOperationsInput | $Enums.AssetType
   fileName?: Prisma.StringFieldUpdateOperationsInput | string
+  storageKey?: Prisma.StringFieldUpdateOperationsInput | string
   storageUrl?: Prisma.StringFieldUpdateOperationsInput | string
   mimeType?: Prisma.StringFieldUpdateOperationsInput | string
   createdAt?: Prisma.DateTimeFieldUpdateOperationsInput | Date | string
@@ -667,6 +702,7 @@ export type AssetSelect<ExtArgs extends runtime.Types.Extensions.InternalArgs = 
   sceneId?: boolean
   assetType?: boolean
   fileName?: boolean
+  storageKey?: boolean
   storageUrl?: boolean
   mimeType?: boolean
   createdAt?: boolean
@@ -680,6 +716,7 @@ export type AssetSelectCreateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   sceneId?: boolean
   assetType?: boolean
   fileName?: boolean
+  storageKey?: boolean
   storageUrl?: boolean
   mimeType?: boolean
   createdAt?: boolean
@@ -693,6 +730,7 @@ export type AssetSelectUpdateManyAndReturn<ExtArgs extends runtime.Types.Extensi
   sceneId?: boolean
   assetType?: boolean
   fileName?: boolean
+  storageKey?: boolean
   storageUrl?: boolean
   mimeType?: boolean
   createdAt?: boolean
@@ -706,12 +744,13 @@ export type AssetSelectScalar = {
   sceneId?: boolean
   assetType?: boolean
   fileName?: boolean
+  storageKey?: boolean
   storageUrl?: boolean
   mimeType?: boolean
   createdAt?: boolean
 }
 
-export type AssetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "pipelineStepId" | "sceneId" | "assetType" | "fileName" | "storageUrl" | "mimeType" | "createdAt", ExtArgs["result"]["asset"]>
+export type AssetOmit<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = runtime.Types.Extensions.GetOmit<"id" | "pipelineStepId" | "sceneId" | "assetType" | "fileName" | "storageKey" | "storageUrl" | "mimeType" | "createdAt", ExtArgs["result"]["asset"]>
 export type AssetInclude<ExtArgs extends runtime.Types.Extensions.InternalArgs = runtime.Types.Extensions.DefaultArgs> = {
   pipelineStep?: boolean | Prisma.PipelineStepDefaultArgs<ExtArgs>
   scene?: boolean | Prisma.Asset$sceneArgs<ExtArgs>
@@ -737,6 +776,7 @@ export type $AssetPayload<ExtArgs extends runtime.Types.Extensions.InternalArgs 
     sceneId: string | null
     assetType: $Enums.AssetType
     fileName: string
+    storageKey: string
     storageUrl: string
     mimeType: string
     createdAt: Date
@@ -1170,6 +1210,7 @@ export interface AssetFieldRefs {
   readonly sceneId: Prisma.FieldRef<"Asset", 'String'>
   readonly assetType: Prisma.FieldRef<"Asset", 'AssetType'>
   readonly fileName: Prisma.FieldRef<"Asset", 'String'>
+  readonly storageKey: Prisma.FieldRef<"Asset", 'String'>
   readonly storageUrl: Prisma.FieldRef<"Asset", 'String'>
   readonly mimeType: Prisma.FieldRef<"Asset", 'String'>
   readonly createdAt: Prisma.FieldRef<"Asset", 'DateTime'>

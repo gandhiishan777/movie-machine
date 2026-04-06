@@ -1,14 +1,15 @@
-import { NextResponse } from 'next/server'
+import { after, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { executePipeline } from '@/lib/pipeline'
+import { executePipeline, preparePipelineRun } from '@/lib/pipeline'
+
+export const maxDuration = 300
 
 export async function POST(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
 
-  // Verify the project exists
   const project = await prisma.project.findUnique({
     where: { id },
   })
@@ -20,38 +21,11 @@ export async function POST(
     )
   }
 
-  // Create the pipeline run with all four steps in a single transaction
-  const pipelineRun = await prisma.$transaction(async (tx) => {
-    const run = await tx.pipelineRun.create({
-      data: {
-        projectId: id,
-        status: 'RUNNING',
-      },
-    })
+  const pipelineRun = await preparePipelineRun(id)
 
-    await tx.pipelineStep.createMany({
-      data: [
-        { pipelineRunId: run.id, stepType: 'SCRIPT_GENERATION', sortOrder: 1, status: 'PENDING' },
-        { pipelineRunId: run.id, stepType: 'IMAGE_GENERATION', sortOrder: 2, status: 'PENDING' },
-        { pipelineRunId: run.id, stepType: 'AUDIO_GENERATION', sortOrder: 3, status: 'PENDING' },
-        { pipelineRunId: run.id, stepType: 'ASSEMBLY', sortOrder: 4, status: 'PENDING' },
-      ],
-    })
-
-    // Update project status
-    await tx.project.update({
-      where: { id },
-      data: { status: 'GENERATING' },
-    })
-
-    // Return the run with its steps
-    return tx.pipelineRun.findUnique({
-      where: { id: run.id },
-      include: { steps: true },
-    })
+  after(async () => {
+    await executePipeline(pipelineRun.id)
   })
-  // Fire and forget — don't await
-  executePipeline(pipelineRun!.id, id, project.prompt)
 
-  return NextResponse.json(pipelineRun, { status: 201 })
+  return NextResponse.json(pipelineRun, { status: 202 })
 }

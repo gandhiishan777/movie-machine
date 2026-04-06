@@ -6,8 +6,27 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
 }
 
+function getRuntimeDatabaseUrl() {
+  const databaseUrl = process.env.DATABASE_URL
+
+  if (!databaseUrl) {
+    throw new Error('DATABASE_URL is not configured')
+  }
+
+  const url = new URL(databaseUrl)
+
+  // `pg` gives ssl-related query params precedence over the ssl object,
+  // so remove them here and rely on the explicit ssl config below.
+  url.searchParams.delete('sslmode')
+  url.searchParams.delete('sslcert')
+  url.searchParams.delete('sslkey')
+  url.searchParams.delete('sslrootcert')
+
+  return url.toString()
+}
+
 const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL!,
+  connectionString: getRuntimeDatabaseUrl(),
   ssl: { rejectUnauthorized: false },
 })
 const adapter = new PrismaPg(pool)
