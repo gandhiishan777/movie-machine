@@ -136,35 +136,66 @@ export async function preparePipelineRun(projectId: string) {
   }
 }
 
-export async function executePipeline(runId: string) {
+// ─── Exported step functions (called by Inngest) ──────────────────────────────
+
+/**
+ * Generates the screenplay via OpenAI and writes Scene records to the DB.
+ * Safe to call multiple times: claimStep() prevents concurrent execution and
+ * the function is a no-op if the step is already COMPLETED or SKIPPED.
+ */
+export async function runScriptGeneration(runId: string): Promise<void> {
   const run = await loadPipelineRun(runId)
-
-  if (!run || run.status !== 'RUNNING') {
-    return
+  if (!run || run.status !== 'RUNNING') return
+  const step = getRequiredStep(run.steps, 'SCRIPT_GENERATION')
+  const result = await executeScriptStep(run, step)
+  if (result === 'failed') {
+    throw new Error('Script generation failed — see pipeline step for details')
   }
-
-  const scriptStep = getRequiredStep(run.steps, 'SCRIPT_GENERATION')
-  const scriptResult = await runScriptGeneration(run, scriptStep)
-
-  if (scriptResult !== 'completed') {
-    return
-  }
-
-  const refreshedRun = await loadPipelineRun(runId)
-
-  if (!refreshedRun || refreshedRun.status !== 'RUNNING') {
-    return
-  }
-
-  const imageStep = getRequiredStep(refreshedRun.steps, 'IMAGE_GENERATION')
-  const imageResult = await runImageGeneration(refreshedRun, imageStep)
-
-  if (imageResult !== 'completed') {
-    return
-  }
-
-  await finalizePipelineRunIfReady(refreshedRun.id, refreshedRun.projectId)
 }
+
+/**
+ * Generates an image per scene via Gemini and uploads to R2.
+ * Safe to call multiple times: already-generated scenes are skipped via
+ * asset deduplication, and claimStep() prevents concurrent execution.
+ */
+export async function runImageGeneration(runId: string): Promise<void> {
+  const run = await loadPipelineRun(runId)
+  if (!run || run.status !== 'RUNNING') return
+  const step = getRequiredStep(run.steps, 'IMAGE_GENERATION')
+  const result = await executeImageStep(run, step)
+  if (result === 'failed') {
+    throw new Error('Image generation failed — see pipeline step for details')
+  }
+}
+
+/**
+ * Audio generation is not yet implemented — step is always SKIPPED.
+ */
+export async function runAudioGeneration(_runId: string): Promise<void> {
+  // no-op: AUDIO_GENERATION step is created with status SKIPPED
+}
+
+/**
+ * Assembly is not yet implemented — step is always SKIPPED.
+ */
+export async function runAssembly(_runId: string): Promise<void> {
+  // no-op: ASSEMBLY step is created with status SKIPPED
+}
+
+/**
+ * Marks the run and project COMPLETED if all required steps are finished.
+ * Safe to call multiple times: idempotent guard inside finalizePipelineRunIfReady.
+ */
+export async function finalizePipelineRun(runId: string): Promise<void> {
+  const run = await prisma.pipelineRun.findUnique({
+    where: { id: runId },
+    select: { projectId: true },
+  })
+  if (!run) return
+  await finalizePipelineRunIfReady(runId, run.projectId)
+}
+
+// ─── Internal helpers ─────────────────────────────────────────────────────────
 
 async function loadPipelineRun(runId: string) {
   return prisma.pipelineRun.findUnique({
@@ -199,7 +230,7 @@ function getRequiredStep<
   return step
 }
 
-async function runScriptGeneration(
+async function executeScriptStep(
   run: LoadedPipelineRun,
   scriptStep: LoadedPipelineStep
 ) {
@@ -267,7 +298,7 @@ async function runScriptGeneration(
   }
 }
 
-async function runImageGeneration(
+async function executeImageStep(
   run: LoadedPipelineRun,
   imageStep: LoadedPipelineStep
 ) {
@@ -448,10 +479,14 @@ async function finalizePipelineRunIfReady(runId: string, projectId: string) {
   }
 
   await prisma.$transaction(async (tx) => {
-    await tx.pipelineRun.update({
-      where: { id: runId },
+    // Conditional update: only finalize if still RUNNING.
+    // Prevents double-finalization if two workers reach this point concurrently.
+    const updated = await tx.pipelineRun.updateMany({
+      where: { id: runId, status: 'RUNNING' },
       data: { status: 'COMPLETED' },
     })
+
+    if (updated.count === 0) return
 
     await tx.project.update({
       where: { id: projectId },

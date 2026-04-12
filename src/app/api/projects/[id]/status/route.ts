@@ -1,6 +1,7 @@
 import { after, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { executePipeline, isPipelineStepStale } from '@/lib/pipeline'
+import { isPipelineStepStale } from '@/lib/pipeline'
+import { inngest } from '@/inngest/client'
 
 const RUN_RECOVERY_DELAY_MS = 15_000
 
@@ -67,7 +68,11 @@ export async function GET(
     (staleRunningStep || (!runningStep && hasPendingWork && isRunRecoveryEligible))
   ) {
     after(async () => {
-      await executePipeline(latestRun.id)
+      await inngest.send({
+        id: latestRun.id,
+        name: 'pipeline/execute',
+        data: { runId: latestRun.id },
+      })
     })
   }
 

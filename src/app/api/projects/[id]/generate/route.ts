@@ -1,6 +1,7 @@
-import { after, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { executePipeline, preparePipelineRun } from '@/lib/pipeline'
+import { preparePipelineRun } from '@/lib/pipeline'
+import { inngest } from '@/inngest/client'
 
 export const maxDuration = 300
 
@@ -23,8 +24,10 @@ export async function POST(
 
   const pipelineRun = await preparePipelineRun(id)
 
-  after(async () => {
-    await executePipeline(pipelineRun.id)
+  await inngest.send({
+    id: pipelineRun.id,
+    name: 'pipeline/execute',
+    data: { runId: pipelineRun.id },
   })
 
   return NextResponse.json(pipelineRun, { status: 202 })

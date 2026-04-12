@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { IconCheck, IconCircleX } from '@/app/components/icons'
 import PipelineProgress from '@/app/components/PipelineProgress'
-import PollingRefresher from './PollingRefresher'
+import SSERefresher from './SSERefresher'
 import FailedProjectActions from './FailedProjectActions'
 import ProjectStoryboard from './ProjectStoryboard'
 import { getAssetProxyUrl } from '@/lib/storage'
@@ -80,7 +80,7 @@ export default async function ProjectPage({
           <div className="flex flex-col items-center gap-5">
             <div className="w-12 h-12 border-2 border-[#E11D48] border-t-transparent rounded-full animate-spin" />
             <p className="text-[#475569] text-sm tracking-wide">Setting up your project...</p>
-            <PollingRefresher projectId={project.id} isGenerating={true} />
+            <SSERefresher projectId={project.id} isGenerating={true} />
           </div>
         )}
 
@@ -109,7 +109,7 @@ export default async function ProjectPage({
               />
             )}
 
-            <PollingRefresher projectId={project.id} isGenerating={true} />
+            <SSERefresher projectId={project.id} isGenerating={true} />
           </div>
         )}
 
