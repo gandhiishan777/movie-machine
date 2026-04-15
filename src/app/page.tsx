@@ -1,11 +1,16 @@
+import { auth } from '@clerk/nextjs/server'
+import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import CreateProjectForm from './components/CreateProjectForm'
 
 export default async function Home() {
-  const user = await prisma.user.upsert({
-    where: { email: 'test@movie-machine.app' },
+  const { userId } = await auth()
+  if (!userId) redirect('/sign-in')
+
+  await prisma.user.upsert({
+    where: { id: userId },
     update: {},
-    create: { email: 'test@movie-machine.app', name: 'Viewer' },
+    create: { id: userId },
   })
 
   return (
@@ -17,7 +22,7 @@ export default async function Home() {
       </div>
 
       <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-16">
-        <CreateProjectForm userId={user.id} />
+        <CreateProjectForm />
       </div>
     </div>
   )

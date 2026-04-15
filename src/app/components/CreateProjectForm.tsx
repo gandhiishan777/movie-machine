@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { IconCircleX, IconFilm } from './icons'
 import GenerateButton from './GenerateButton'
 
-export default function CreateProjectForm({ userId }: { userId: string }) {
+export default function CreateProjectForm() {
   const router = useRouter()
   const [title, setTitle] = useState('')
   const [prompt, setPrompt] = useState('')
@@ -23,7 +23,7 @@ export default function CreateProjectForm({ userId }: { userId: string }) {
       const createRes = await fetch('/api/projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: title.trim(), prompt: prompt.trim(), userId }),
+        body: JSON.stringify({ title: title.trim(), prompt: prompt.trim() }),
       })
 
       if (!createRes.ok) {

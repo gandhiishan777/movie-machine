@@ -10,6 +10,8 @@ import {
   maybeRecoverStalePipelineRun,
 } from '@/lib/project-stream'
 import { createListenClient } from '@/lib/pg-listen-client'
+import { auth } from '@clerk/nextjs/server'
+import { prisma } from '@/lib/db'
 
 function sleep(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms))
@@ -19,7 +21,18 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const { userId } = await auth()
+  if (!userId) return new Response('Unauthorized', { status: 401 })
+
   const { id } = await params
+
+  const projectOwner = await prisma.project.findUnique({
+    where: { id },
+    select: { userId: true },
+  })
+  if (!projectOwner || projectOwner.userId !== userId) {
+    return new Response('Not Found', { status: 404 })
+  }
   const encoder = new TextEncoder()
 
   const stream = new ReadableStream({

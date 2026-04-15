@@ -1,5 +1,6 @@
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
+import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/db'
 import { IconCheck, IconCircleX } from '@/app/components/icons'
 import PipelineProgress from '@/app/components/PipelineProgress'
@@ -13,6 +14,9 @@ export default async function ProjectPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  const { userId } = await auth()
+  if (!userId) redirect('/sign-in')
+
   const { id } = await params
 
   const project = await prisma.project.findUnique({
@@ -32,7 +36,7 @@ export default async function ProjectPage({
     },
   })
 
-  if (!project) notFound()
+  if (!project || project.userId !== userId) notFound()
 
   const latestRun = project.pipelineRuns[0] ?? null
   const imageStep = latestRun?.steps.find((step) => step.stepType === 'IMAGE_GENERATION') ?? null
