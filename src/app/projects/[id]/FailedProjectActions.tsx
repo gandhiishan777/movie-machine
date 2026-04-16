@@ -38,7 +38,7 @@ export default function FailedProjectActions({ projectId }: { projectId: string 
           {isRetrying ? 'Retrying...' : 'Try Again'}
         </button>
         <button
-          onClick={() => router.push('/')}
+          onClick={() => router.push('/new')}
           className="bg-[#0F0F23] hover:bg-[#1E1B4B] border border-[#1E1B4B] text-[#F8FAFC] font-medium px-6 py-3 rounded-xl transition-colors cursor-pointer text-sm"
         >
           Start Over

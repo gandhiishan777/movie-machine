@@ -44,7 +44,7 @@ export default async function DashboardPage() {
             </p>
           </div>
           <Link
-            href="/"
+            href="/new"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-medium text-white bg-gradient-to-r from-[#7c3aed] to-[#06b6d4] hover:opacity-85 transition-opacity duration-200 cursor-pointer shadow-[0_0_24px_rgba(124,58,237,0.25)] self-start sm:self-auto"
           >
             <svg
@@ -86,7 +86,7 @@ export default async function DashboardPage() {
               Write a prompt and let AI build your first movie from scratch.
             </p>
             <Link
-              href="/"
+              href="/new"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-semibold text-white bg-gradient-to-r from-[#7c3aed] to-[#06b6d4] hover:opacity-85 transition-opacity duration-200 cursor-pointer"
             >
               Create your first movie

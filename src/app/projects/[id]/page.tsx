@@ -145,7 +145,7 @@ export default async function ProjectPage({
 
             <div className="text-center mt-10">
               <Link
-                href="/"
+                href="/new"
                 className="bg-[#0F0F23] hover:bg-[#1E1B4B] border border-[#1E1B4B] text-[#F8FAFC] font-medium px-8 py-3 rounded-xl transition-colors text-sm inline-block"
               >
                 + Write Another Movie
