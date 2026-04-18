@@ -1,12 +1,13 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
 import { auth } from '@clerk/nextjs/server'
+import { UserButton } from '@clerk/nextjs'
 import { prisma } from '@/lib/db'
 import { IconCheck, IconCircleX } from '@/app/components/icons'
 import PipelineProgress from '@/app/components/PipelineProgress'
 import SSERefresher from './SSERefresher'
-import FailedProjectActions from './FailedProjectActions'
 import ProjectStoryboard from './ProjectStoryboard'
+import StartOverButton from './StartOverButton'
 import { getAssetProxyUrl } from '@/lib/storage'
 
 export default async function ProjectPage({
@@ -69,29 +70,61 @@ export default async function ProjectPage({
   const failedStep = latestRun?.steps.find((step) => step.status === 'FAILED') ?? null
   const failedStepMessage = getProjectFailureMessage(failedStep?.errorMessage ?? null)
 
+  // Show "Start Over" in the navbar whenever the project has content worth wiping
+  const showStartOver = project.status !== 'DRAFT'
+
   return (
-    <div className="min-h-screen bg-black text-[#F8FAFC]">
-      {/* Ambient background glow */}
+    <div className="min-h-screen bg-[#0c0a09] text-white">
+      {/* Ambient background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] rounded-full bg-[#E11D48]/4 blur-[120px]" />
-        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-[#E11D48]/20 to-transparent" />
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#CA8A04]/20 to-transparent" />
+        <div className="absolute top-1/3 left-1/4 w-[600px] h-[600px] rounded-full bg-[#CA8A04]/[0.04] blur-[140px] animate-float-a" />
+        <div className="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] rounded-full bg-[#7c3aed]/[0.04] blur-[120px] animate-float-b" />
+        <div className="absolute inset-0 hero-grid opacity-30" />
+        <div className="absolute inset-0 grain-overlay" />
       </div>
 
-      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4 py-16">
+      {/* Navbar */}
+      <nav className="sticky top-0 z-50 flex items-center justify-between px-6 py-4 border-b border-[#44403C]/40 bg-[#0c0a09]/80 backdrop-blur-md">
+        <Link
+          href="/dashboard"
+          className="text-xl font-black tracking-tighter bg-gradient-to-r from-[#FDE68A] via-[#CA8A04] to-[#92400e] bg-clip-text text-transparent hover:opacity-80 transition-opacity duration-200"
+        >
+          Movie Machine
+        </Link>
+        <div className="flex items-center gap-3">
+          {showStartOver && project.status !== 'FAILED' && (
+            <StartOverButton projectId={project.id} />
+          )}
+          <UserButton />
+        </div>
+      </nav>
+
+      <div className="relative z-10 px-4 py-12">
 
         {/* ── DRAFT / CREATING ─────────────────────────────────────────── */}
         {project.status === 'DRAFT' && (
-          <div className="flex flex-col items-center gap-5">
-            <div className="w-12 h-12 border-2 border-[#E11D48] border-t-transparent rounded-full animate-spin" />
-            <p className="text-[#475569] text-sm tracking-wide">Setting up your project...</p>
+          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] gap-6">
+            <div className="relative w-16 h-16">
+              <div className="absolute inset-0 rounded-full border-2 border-[#CA8A04]/15" />
+              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#CA8A04] animate-spin" />
+              <div className="absolute inset-2 rounded-full border border-[#CA8A04]/10 animate-spin" style={{ animationDuration: '3s', animationDirection: 'reverse' }} />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-2 h-2 rounded-full bg-[#CA8A04] gold-pulse" />
+              </div>
+            </div>
+            <div className="text-center">
+              <p className="text-[#CA8A04] text-[10px] font-bold tracking-[0.3em] uppercase mb-1">Initialising</p>
+              <p className="text-white/35 text-sm tracking-wide">Setting up your project...</p>
+            </div>
             <SSERefresher projectId={project.id} isGenerating={true} />
           </div>
         )}
 
         {/* ── GENERATING — pipeline progress ───────────────────────────── */}
         {project.status === 'GENERATING' && (
-          <div className="w-full space-y-8">
-            <div className="mx-auto">
+          <div className="max-w-7xl mx-auto space-y-10">
+            <div className="flex justify-center">
               <PipelineProgress
                 title={project.title}
                 steps={latestRun?.steps ?? []}
@@ -119,13 +152,13 @@ export default async function ProjectPage({
 
         {/* ── COMPLETED — storyboard reveal ─────────────────────────────── */}
         {project.status === 'COMPLETED' && (
-          <div className="w-full space-y-8">
+          <div className="max-w-7xl mx-auto space-y-8">
             <div className="text-center">
-              <div className="inline-flex items-center gap-1.5 text-emerald-400 text-sm font-medium mb-3">
+              <div className="inline-flex items-center gap-1.5 text-emerald-400 text-sm font-bold mb-3 border border-emerald-500/20 rounded-full px-4 py-1.5 bg-emerald-500/5">
                 <IconCheck className="w-4 h-4" />
                 Storyboard complete
               </div>
-              <p className="text-[#475569] text-sm">
+              <p className="text-white/35 text-sm mt-2">
                 {project.scenes.length} scene{project.scenes.length !== 1 ? 's' : ''} written and illustrated
               </p>
             </div>
@@ -146,7 +179,7 @@ export default async function ProjectPage({
             <div className="text-center mt-10">
               <Link
                 href="/new"
-                className="bg-[#0F0F23] hover:bg-[#1E1B4B] border border-[#1E1B4B] text-[#F8FAFC] font-medium px-8 py-3 rounded-xl transition-colors text-sm inline-block"
+                className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-bold text-white bg-gradient-to-r from-[#CA8A04] to-[#92400e] hover:opacity-85 transition-opacity duration-200 cursor-pointer shadow-[0_0_24px_rgba(202,138,4,0.3)]"
               >
                 + Write Another Movie
               </Link>
@@ -156,18 +189,20 @@ export default async function ProjectPage({
 
         {/* ── FAILED — error state ──────────────────────────────────────── */}
         {project.status === 'FAILED' && (
-          <div className="w-full space-y-8">
-            <div className="w-full max-w-2xl mx-auto text-center">
-              <div className="bg-[#E11D48]/8 border border-[#E11D48]/25 rounded-2xl p-8 mb-6">
-                <IconCircleX className="w-12 h-12 text-[#E11D48] mx-auto mb-4" />
+          <div className="max-w-7xl mx-auto space-y-8">
+            <div className="max-w-2xl mx-auto text-center">
+              <div className="bg-[#1C1917]/60 border border-red-500/20 rounded-2xl p-8 mb-6">
+                <IconCircleX className="w-12 h-12 text-red-400 mx-auto mb-4" />
                 <h2 className="text-xl font-bold mb-2">Generation Failed</h2>
-                <p className="text-[#475569] text-sm leading-relaxed">
+                <p className="text-white/40 text-sm leading-relaxed">
                   {failedStep?.stepType === 'IMAGE_GENERATION'
                     ? failedStepMessage
-                    : 'Something went wrong during script generation. Check your API keys and try again.'}
+                    : 'Something went wrong during script generation. Check your API keys, then use Start Over when you are ready to regenerate.'}
                 </p>
               </div>
-              <FailedProjectActions projectId={project.id} />
+              <div className="flex justify-center">
+                <StartOverButton projectId={project.id} variant="primary" />
+              </div>
             </div>
 
             {project.scenes.length > 0 && (
@@ -194,7 +229,7 @@ export default async function ProjectPage({
 
 function getProjectFailureMessage(errorMessage: string | null) {
   if (!errorMessage) {
-    return 'Image generation hit a problem. Your scenes are still saved and you can retry from the visual stage.'
+    return 'Image generation hit a problem. Your scenes are still saved. Use Start Over when you are ready to regenerate.'
   }
 
   const normalized = errorMessage.toLowerCase()
@@ -207,5 +242,5 @@ function getProjectFailureMessage(errorMessage: string | null) {
     return 'Gemini image generation hit a quota or billing limit. Your scenes are saved, but frames cannot be created until quota is available.'
   }
 
-  return 'Image generation hit a problem. Your scenes are still saved and you can retry from the visual stage.'
+  return 'Image generation hit a problem. Your scenes are still saved. Use Start Over when you are ready to regenerate.'
 }

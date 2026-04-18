@@ -2,8 +2,20 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence, type Variants } from 'framer-motion'
 import { IconCircleX, IconFilm } from './icons'
 import GenerateButton from './GenerateButton'
+
+const staggerContainer: Variants = {
+  hidden: {},
+  show: {
+    transition: { staggerChildren: 0.08, delayChildren: 0.1 },
+  },
+}
+const fadeUp: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.55, ease: 'easeOut' } },
+}
 
 export default function CreateProjectForm() {
   const router = useRouter()
@@ -51,80 +63,125 @@ export default function CreateProjectForm() {
     }
   }
 
-  if (isCreating) {
-    return (
-      <div className="flex flex-col items-center gap-5">
-        <div className="w-12 h-12 border-2 border-[#E11D48] border-t-transparent rounded-full animate-spin" />
-        <p className="text-[#475569] text-sm tracking-wide">Setting up your project...</p>
-      </div>
-    )
-  }
-
   return (
-    <div className="w-full max-w-lg animate-[fade-slide-up_0.5s_cubic-bezier(0.16,1,0.3,1)_both]">
-      {/* Header */}
-      <div className="text-center mb-10">
-        <div className="inline-flex items-center gap-2 text-[#475569] text-xs font-semibold tracking-[0.15em] uppercase mb-5">
-          <IconFilm className="w-4 h-4" />
-          AI Screenplay Studio
-        </div>
-        <h1 className="text-6xl font-bold tracking-tight mb-3 movie-title-glow">
-          MOVIE<br />MACHINE
-        </h1>
-        <p className="text-[#475569] text-base">
-          Describe your movie. We&apos;ll write the script.
-        </p>
-      </div>
+    <AnimatePresence mode="wait">
+      {isCreating ? (
+        <motion.div
+          key="creating"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.4 }}
+          className="flex flex-col items-center gap-6"
+        >
+          {/* Cinematic spinner */}
+          <div className="relative w-16 h-16">
+            <div className="absolute inset-0 rounded-full border-2 border-[#CA8A04]/20" />
+            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-[#CA8A04] animate-spin" />
+            <div className="absolute inset-2 rounded-full border border-[#CA8A04]/10 animate-spin" style={{ animationDuration: '3s', animationDirection: 'reverse' }} />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-2 h-2 rounded-full bg-[#CA8A04] gold-pulse" />
+            </div>
+          </div>
+          <div className="text-center">
+            <p className="text-[#CA8A04] text-xs font-bold tracking-[0.3em] uppercase mb-1">
+              Initialising
+            </p>
+            <p className="text-white/40 text-sm tracking-wide">Setting up your project...</p>
+          </div>
+        </motion.div>
+      ) : (
+        <motion.div
+          key="form"
+          variants={staggerContainer}
+          initial="hidden"
+          animate="show"
+          exit={{ opacity: 0, y: -20, transition: { duration: 0.3 } }}
+          className="w-full max-w-lg"
+        >
+          {/* Header */}
+          <motion.div variants={fadeUp} className="text-center mb-10">
+            <div className="inline-flex items-center gap-2 text-[#CA8A04]/70 text-xs font-bold tracking-[0.2em] uppercase mb-6 border border-[#CA8A04]/20 rounded-full px-4 py-1.5 bg-[#CA8A04]/5">
+              <IconFilm className="w-3.5 h-3.5" />
+              AI Screenplay Studio
+            </div>
 
-      {/* Form card */}
-      <form
-        onSubmit={handleSubmit}
-        className="bg-[#0F0F23] border border-[#1E1B4B] rounded-2xl p-8 space-y-5"
-      >
-        <div>
-          <label htmlFor="title" className="block text-xs font-semibold text-[#475569] uppercase tracking-widest mb-2">
-            Movie Title
-          </label>
-          <input
-            id="title"
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="The Last Detective"
-            required
-            maxLength={120}
-            className="w-full bg-black/60 border border-[#1E1B4B] rounded-xl px-4 py-3 text-[#F8FAFC] placeholder:text-[#1E2940] focus:outline-none focus:border-[#E11D48] focus:ring-1 focus:ring-[#E11D48]/50 transition-colors text-base"
-          />
-        </div>
+            <h1
+              className="text-6xl sm:text-7xl font-black tracking-tighter mb-4 bg-gradient-to-br from-[#FDE68A] via-[#CA8A04] to-[#92400e] bg-clip-text text-transparent movie-title-glow glitch-text"
+              data-text="MOVIE&#10;MACHINE"
+            >
+              MOVIE<br />MACHINE
+            </h1>
 
-        <div>
-          <label htmlFor="prompt" className="block text-xs font-semibold text-[#475569] uppercase tracking-widest mb-2">
-            Your Idea
-          </label>
-          <textarea
-            id="prompt"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="A noir detective in 1940s Tokyo discovers a conspiracy reaching into the highest levels of government, forcing him to question everything he believes about justice..."
-            required
-            rows={5}
-            className="w-full bg-black/60 border border-[#1E1B4B] rounded-xl px-4 py-3 text-[#F8FAFC] placeholder:text-[#1E2940] focus:outline-none focus:border-[#E11D48] focus:ring-1 focus:ring-[#E11D48]/50 transition-colors resize-none text-sm leading-relaxed"
-          />
-        </div>
+            <p className="text-white/35 text-base leading-relaxed">
+              Describe your movie. We&apos;ll write the script and illustrate every scene.
+            </p>
+          </motion.div>
 
-        {error && (
-          <p className="text-[#E11D48] text-sm flex items-center gap-1.5">
-            <IconCircleX className="w-4 h-4 flex-shrink-0" />
-            {error}
-          </p>
-        )}
+          {/* Form card */}
+          <motion.form
+            variants={fadeUp}
+            onSubmit={handleSubmit}
+            className="relative bg-[#1C1917]/80 border border-[#44403C]/60 rounded-2xl p-8 space-y-5 backdrop-blur-sm scanlines"
+          >
+            {/* Card gold top-line accent */}
+            <div className="absolute top-0 left-8 right-8 h-px bg-gradient-to-r from-transparent via-[#CA8A04]/50 to-transparent" />
 
-        <GenerateButton />
+            <motion.div variants={fadeUp}>
+              <label htmlFor="title" className="block text-[10px] font-bold text-[#CA8A04]/60 uppercase tracking-[0.2em] mb-2">
+                Movie Title
+              </label>
+              <input
+                id="title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder="The Last Detective"
+                required
+                maxLength={120}
+                className="w-full bg-[#0c0a09]/60 border border-[#44403C]/80 rounded-xl px-4 py-3 text-white placeholder:text-white/15 focus:outline-none focus:border-[#CA8A04]/60 focus:ring-1 focus:ring-[#CA8A04]/30 transition-all duration-300 text-base"
+              />
+            </motion.div>
 
-        <p className="text-center text-[#1E2940] text-xs">
-          Powered by GPT-4o + Gemini Flash · Script and storyboard generation may take a minute or two
-        </p>
-      </form>
-    </div>
+            <motion.div variants={fadeUp}>
+              <label htmlFor="prompt" className="block text-[10px] font-bold text-[#CA8A04]/60 uppercase tracking-[0.2em] mb-2">
+                Your Idea
+              </label>
+              <textarea
+                id="prompt"
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="A noir detective in 1940s Tokyo discovers a conspiracy reaching into the highest levels of government, forcing him to question everything he believes about justice..."
+                required
+                rows={5}
+                className="w-full bg-[#0c0a09]/60 border border-[#44403C]/80 rounded-xl px-4 py-3 text-white placeholder:text-white/15 focus:outline-none focus:border-[#CA8A04]/60 focus:ring-1 focus:ring-[#CA8A04]/30 transition-all duration-300 resize-none text-sm leading-relaxed"
+              />
+            </motion.div>
+
+            <AnimatePresence>
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="text-red-400 text-sm flex items-center gap-1.5"
+                >
+                  <IconCircleX className="w-4 h-4 flex-shrink-0" />
+                  {error}
+                </motion.p>
+              )}
+            </AnimatePresence>
+
+            <motion.div variants={fadeUp}>
+              <GenerateButton disabled={isCreating} />
+            </motion.div>
+
+            <p className="text-center text-white/15 text-xs">
+              Powered by GPT-4o · Script and storyboard generation may take a minute or two
+            </p>
+          </motion.form>
+        </motion.div>
+      )}
+    </AnimatePresence>
   )
 }

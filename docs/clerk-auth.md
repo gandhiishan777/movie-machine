@@ -28,8 +28,8 @@ Each layer is independent: the middleware does not redirect — it only populate
 
 | File | What changed | Why |
 |------|-------------|-----|
-| `src/middleware.ts` | Added `clerkMiddleware` export and Next.js `matcher` config | Required by Clerk to intercept every request and attach session state before any route handler runs |
-| `src/app/layout.tsx` | Wrapped the entire app in `<ClerkProvider>`; added a `<header>` with `<SignInButton>`, `<SignUpButton>`, and `<UserButton>` rendered conditionally via `<Show>` | `ClerkProvider` is the React context that surfaces the session to all child components and Server Components via `auth()`; the header gives unauthenticated users a way to sign in without navigating away |
+| `src/proxy.ts` | Added `clerkMiddleware` export and Next.js `matcher` config (Next 16 uses `src/proxy.ts` as the middleware entry) | Required by Clerk to intercept matched requests and attach session state before route handlers run |
+| `src/app/layout.tsx` | Wraps `{children}` in `<ClerkProvider>` **inside** `<body>` (not wrapping `<html>`), per Clerk’s Next.js App Router quickstart | `ClerkProvider` must live under `<body>` so Clerk’s scripts and hydration behave correctly; it surfaces the session to Server Components via `auth()` |
 | `src/app/page.tsx` | Replaced hardcoded test user ID with `auth()` call; added redirect to `/sign-in` for unauthenticated visitors; replaced `findUnique` with `upsert` for the User record | `auth()` returns the real Clerk `userId`; `upsert` ensures the local User row is created on first visit without a separate lookup-then-create round trip |
 | `src/app/api/projects/route.ts` | Added `auth()` guard to both `POST` and `GET` handlers; `POST` now writes `userId` from Clerk instead of a hardcoded value; `GET` filters by `userId` | Prevents unauthenticated access; ensures users can only read and create projects that belong to them |
 | `src/app/api/projects/[id]/generate/route.ts` | Added `auth()` guard; after fetching the project, checks that `project.userId === userId` before proceeding | Prevents one authenticated user from triggering generation on another user's project (ownership check) |
@@ -39,7 +39,7 @@ Each layer is independent: the middleware does not redirect — it only populate
 
 ## Environment Variables
 
-Add the following variables to your `.env` file. They are not yet in `.env.example` and must be obtained from the [Clerk Dashboard](https://dashboard.clerk.com).
+Add the following variables to your `.env` file. Placeholders are listed in [`.env.example`](../.env.example); real values must come from the [Clerk Dashboard](https://dashboard.clerk.com).
 
 | Variable | Required | Description |
 |----------|----------|-------------|
@@ -161,6 +161,27 @@ A missing project and a project owned by someone else both return `404`. This in
    npm run dev
    ```
 
-5. **First sign-in** — navigate to `http://localhost:3000`. You will be redirected to the Clerk sign-in UI. After signing in, Clerk sets a session cookie and redirects back to `/`. The home page then upserts your User record in Postgres using your Clerk user ID.
+5. **Custom sign-in/up pages** — [`src/app/sign-in/[[...sign-in]]/page.tsx`](../src/app/sign-in/[[...sign-in]]/page.tsx) and [`src/app/sign-up/[[...sign-up]]/page.tsx`](../src/app/sign-up/[[...sign-up]]/page.tsx) render `<SignIn routing="path" path="/sign-in" />` and `<SignUp routing="path" path="/sign-up" />` so path-based routing matches the optional catch-all routes and avoids Clerk’s “not configured correctly” dev check failures.
+
+6. **First sign-in** — open `http://localhost:3000`, use **Sign In** / **Sign Up** in the nav, or go directly to `/sign-in`. After signing in, Clerk redirects per `NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL` (default `/`). The home page upserts your `User` row in Postgres when you land on `/` while signed in.
 
 > The Clerk secret key must never be committed to version control. Confirm that `.env` is listed in `.gitignore` before adding real keys.
+
+---
+
+## Troubleshooting: HTTP 431 on `localhost`
+
+**Symptom:** Chrome shows “This page isn’t working” with **HTTP ERROR 431** (Request Header Fields Too Large). The URL may include a long `__clerk_handshake=…` query string.
+
+**Cause:** Node’s HTTP server rejects requests whose **total headers** exceed a limit (often triggered by a very large **`Cookie`** header). After many local sign-ins or failed Clerk handshakes, `localhost` can accumulate multiple Clerk cookies; the browser sends all of them on every request.
+
+**How to confirm:** In DevTools → **Network** → select the failed document request → **Headers** → inspect **Request Headers → Cookie**. If the cookie string is huge, that matches 431.
+
+**Fix (preferred):**
+
+1. Clear site data for `http://localhost:3000`: Chrome → **Application** → **Storage** → **Clear site data** (or delete cookies for `localhost` only).
+2. Retry in a **new Incognito** window to rule out stale cookies.
+
+**Mitigation in this repo:** `npm run dev` sets `NODE_OPTIONS=--max-http-header-size=131072` so local Next/Node accepts larger headers during development. You should still clear cookies periodically; raising the limit does not fix invalid or duplicated sessions.
+
+**If 431 persists after a clean profile:** Check that `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` are from the **same** Clerk application (e.g. both `pk_test_` / `sk_test_` for dev) and that Clerk’s dashboard allows `http://localhost:3000` as an allowed origin / redirect URL.
